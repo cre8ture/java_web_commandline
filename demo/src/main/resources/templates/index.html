@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+  </head>
+  <html>
+    <body>
+      <h2>Command Execution</h2>
+
+      <div id="commandHistory"></div>
+
+      <form id="commandForm">
+        <label for="command">Command:</label><br />
+        <input type="text" id="command" name="command" /><br />
+        <input type="submit" value="Submit" />
+      </form>
+
+      <br/>
+      <br/>
+
+      <br/>
+
+      <button id="downloadDb">Download Database</button>
+      <div id="databaseOutput"></div>
+
+      <p id="output"></p>
+
+      <script>
+        var commandHistory = [];
+        var commandIndex = -1;
+
+        document
+          .getElementById("commandForm")
+          .addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            var command = document.getElementById("command").value;
+            commandHistory.push(command);
+            commandIndex = commandHistory.length - 1;
+
+            fetch(window.location.origin + "/execute", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(command),
+            })
+              .then((response) => response.text())
+              .then((data) => {
+                var commandElement = document.createElement("pre");
+                commandElement.textContent = "$ " + command;
+                document
+                  .getElementById("commandHistory")
+                  .appendChild(commandElement);
+
+                var dataElement = document.createElement("pre");
+                dataElement.textContent = data;
+                document
+                  .getElementById("commandHistory")
+                  .appendChild(dataElement);
+
+                document.getElementById("command").value = "";
+              });
+            document
+              .getElementById("command")
+              .addEventListener("keydown", function (event) {
+                if (event.key === "ArrowUp") {
+                  if (commandIndex >= 0) {
+                    document.getElementById("command").value =
+                      commandHistory[commandIndex];
+                    commandIndex--;
+                  }
+                } else if (event.key === "ArrowDown") {
+                  if (commandIndex < commandHistory.length - 1) {
+                    commandIndex++;
+                    document.getElementById("command").value =
+                      commandHistory[commandIndex];
+                  }
+                }
+              });
+          });
+
+        document
+          .getElementById("downloadDb")
+          .addEventListener("click", function (event) {
+            event.preventDefault();
+
+            fetch(window.location.origin + "/database")
+              .then((response) => response.text())
+              .then((data) => {
+                var dataElement = document.createElement("pre");
+                dataElement.textContent = data;
+                document
+                  .getElementById("databaseOutput")
+                  .appendChild(dataElement);
+              });
+          });
+      </script>
+    </body>
+  </html>
+</html>
